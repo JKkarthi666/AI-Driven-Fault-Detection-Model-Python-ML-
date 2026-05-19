@@ -1,22 +1,34 @@
-"""Helpers for loading model and performing prediction."""
 import joblib
-import numpy as np
+import pandas as pd
 
-
+from feature_engineering import create_features
 
 
 class FaultDetector:
-def __init__(self, model_path='model.pkl'):
-self.pipeline = joblib.load(model_path)
 
+    def __init__(self, model_path="../models/model.pkl"):
 
-def predict(self, samples):
-# samples: array-like shape (n, 2) -> [power, temp]
-return self.pipeline.predict(samples)
+        self.pipeline = joblib.load(model_path)
 
+    def preprocess(self, samples):
 
-def predict_proba(self, samples):
-if hasattr(self.pipeline, 'predict_proba'):
-return self.pipeline.predict_proba(samples)[:, 1]
-else:
-return None
+        df = pd.DataFrame(
+            samples,
+            columns=["power", "temp", "voltage"]
+        )
+
+        df = create_features(df)
+
+        return df
+
+    def predict(self, samples):
+
+        df = self.preprocess(samples)
+
+        return self.pipeline.predict(df)
+
+    def predict_proba(self, samples):
+
+        df = self.preprocess(samples)
+
+        return self.pipeline.predict_proba(df)[:, 1]
